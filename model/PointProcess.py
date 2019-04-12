@@ -101,7 +101,7 @@ class PointProcessModel(object):
                 ci, batch_dict = samples2dict(samples, device, Cs, FCs)
                 optimizer.zero_grad()
                 lambda_t, Lambda_t = self.lambda_model(batch_dict)
-                loss = self.loss_function(lambda_t, Lambda_t, ci) / lambda_t.size(0)
+                loss = self.loss_function(lambda_t, Lambda_t, ci)  / lambda_t.size(0)
                 reg = 0
                 if sparsity is not None:
                     for parameter in self.lambda_model.parameters():
@@ -117,11 +117,11 @@ class PointProcessModel(object):
                     logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]'.format(
                         epoch, batch_idx * ci.size(0), len(dataloader.dataset), 100. * batch_idx / len(dataloader)))
                     if sparsity is not None:
-                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f} Time={:.2f}sec'.format(
-                            loss.data, reg.data, time.time() - start))
+                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Loss: {:.6f}, Time={:.2f}sec'.format(
+                            loss.data, reg.data, loss_total, time.time() - start))
                     else:
-                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f} Time={:.2f}sec'.format(
-                            loss.data, 0, time.time() - start))
+                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Loss: {:.6f}, Time={:.2f}sec'.format(
+                            loss.data, 0, loss_total, time.time() - start))
 
             if validation_set is not None:
                 validation_loss = self.validation(validation_set, use_cuda)

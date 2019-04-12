@@ -9,7 +9,7 @@ import time
 from typing import Dict
 
 
-def load_sequences_csv(file_name: str, domain_names: Dict):
+def load_sequences_csv(file_name: str, domain_names: Dict, upperlimit = None):
     """
     Load event sequences from a csv file
     :param file_name: the path and name of the target csv file
@@ -43,8 +43,8 @@ def load_sequences_csv(file_name: str, domain_names: Dict):
                 'seq2idx': None,
                 'idx2seq': None,
                 'sequences': []}
-
-    df = pd.read_csv(file_name)
+    if upperlimit is not None:
+        df = pd.read_csv(file_name).iloc[:upperlimit]
     type2idx = {}
     idx2type = {}
     seq2idx = {}
@@ -74,6 +74,8 @@ def load_sequences_csv(file_name: str, domain_names: Dict):
 
         if i % 10000 == 0:
             logger.info('{} events have been processed... Time={}ms.'.format(i, round(1000*(time.time() - start))))
+
+
     logger.info('Done! {} sequences with {} event types are found in {}ms'.format(
         seq_idx+1, type_idx+1, round(1000*(time.time() - start))))
 

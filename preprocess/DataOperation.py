@@ -363,7 +363,6 @@ def aggregating(database, dt):
 
     return output
 
-
 class EventSampler(Dataset):
     """Load event sequences via minbatch"""
     def __init__(self, database, memorysize):
@@ -477,6 +476,129 @@ class EventSampler(Dataset):
 
             return current_time, history_time, current_event, history_event, current_seq, \
                 seq_feature, current_event_feature, history_event_feature  # 8 outputs
+
+class ThinningSampler(Dataset):
+    def __init__(self, database, length):
+        """
+        :param database: the observed event sequences
+            database = {'event_features': None or (C, De) float array of event's static features,
+                                      C is the number of event types.
+                        'type2idx': a Dict = {'event_name': event_index}
+                        'idx2type': a Dict = {event_index: 'event_name'}
+                        'seq2idx': a Dict = {'seq_name': seq_index}
+                        'idx2seq': a Dict = {seq_index: 'seq_name'}
+                        'sequences': a List  = {seq_1, seq_2, ..., seq_N}.
+                        }
+
+            For the i-th sequence:
+            seq_i = {'times': (N,) float array of timestamps, N is the number of events.
+                     'events': (N,) int array of event types.
+                     'seq_feature': None or (Ds,) float array of sequence's static feature.
+                     't_start': a float number indicating the start timestamp of the sequence.
+                     't_stop': a float number indicating the stop timestamp of the sequence.
+                     'label': None or int/float number indicating the labels of the sequence}
+        :param memorysize: how many historical events remembered by each event
+        """
+        self.event_cell = []
+        self.time_cell = []
+        self.database = database
+        self.length = length # equivalence of memorysize
+        for i in range(len(database['sequences'])):
+            seq_i = database['sequences'][i]
+            times = seq_i['times']
+            seq_i_length = len(times)
+            events = seq_i['events']
+            for j in range(len(events)):
+                choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
+                thinned_events = events[choice_idx]
+                thinned_time = times[choice_idx]
+                self.event_cell.append((events[-1], thinned_events, i))
+                self.time_cell.append((times[-1], thinned_time))
+        logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
+    #    logger.info('Each event is influenced by its last {} historical events.'.format(self.memory_size))
+
+    def __len__(self):
+        return len(self.event_cell)
+
+    def __getitem__(self, idx):
+        current_time = torch.Tensor([self.time_cell[idx][0]])  # torch.from_numpy()
+        current_time = current_time.type(torch.FloatTensor)
+        history_time = torch.from_numpy(self.time_cell[idx][1])
+        history_time = history_time.type(torch.FloatTensor)
+
+        current_event_numpy = self.event_cell[idx][0]
+        current_event = torch.Tensor([self.event_cell[idx][0]])
+        current_event = current_event.type(torch.LongTensor)
+        history_event_numpy = self.event_cell[idx][1]
+        history_event = torch.from_numpy(self.event_cell[idx][1])
+        history_event = history_event.type(torch.LongTensor)
+
+        current_seq_numpy = self.event_cell[idx][2]
+        current_seq = torch.Tensor([self.event_cell[idx][2]])
+        current_seq = current_seq.type(torch.LongTensor)
+
+        if self.database['sequences'][current_seq_numpy]['seq_feature'] is None \
+                and self.database['event_features'] is None:
+            return current_time, history_time, current_event, history_event, current_seq  # 5 outputs
+
+class FullData(Dataset):
+    def __init__(self, database):
+        """
+        :param database: the observed event sequences
+            database = {'event_features': None or (C, De) float array of event's static features,
+                                      C is the number of event types.
+                        'type2idx': a Dict = {'event_name': event_index}
+                        'idx2type': a Dict = {event_index: 'event_name'}
+                        'seq2idx': a Dict = {'seq_name': seq_index}
+                        'idx2seq': a Dict = {seq_index: 'seq_name'}
+                        'sequences': a List  = {seq_1, seq_2, ..., seq_N}.
+                        }
+
+            For the i-th sequence:
+            seq_i = {'times': (N,) float array of timestamps, N is the number of events.
+                     'events': (N,) int array of event types.
+                     'seq_feature': None or (Ds,) float array of sequence's static feature.
+                     't_start': a float number indicating the start timestamp of the sequence.
+                     't_stop': a float number indicating the stop timestamp of the sequence.
+                     'label': None or int/float number indicating the labels of the sequence}
+        :param memorysize: how many historical events remembered by each event
+        """
+        self.event_cell = []
+        self.time_cell = []
+        self.database = database
+         # equivalence of memorysize
+        for i in range(len(database['sequences'])):
+            seq_i = database['sequences'][i]
+            times = seq_i['times']
+            events = seq_i['events']
+            self.event_cell.append((events[-1], events[:-1], i))
+            self.time_cell.append((times[-1], times[:-1]))
+        logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
+    #    logger.info('Each event is influenced by its last {} historical events.'.format(self.memory_size))
+
+    def __len__(self):
+        return len(self.event_cell)
+
+    def __getitem__(self, idx):
+        current_time = torch.Tensor([self.time_cell[idx][0]])  # torch.from_numpy()
+        current_time = current_time.type(torch.FloatTensor)
+        history_time = torch.from_numpy(self.time_cell[idx][1])
+        history_time = history_time.type(torch.FloatTensor)
+
+        current_event_numpy = self.event_cell[idx][0]
+        current_event = torch.Tensor([self.event_cell[idx][0]])
+        current_event = current_event.type(torch.LongTensor)
+        history_event_numpy = self.event_cell[idx][1]
+        history_event = torch.from_numpy(self.event_cell[idx][1])
+        history_event = history_event.type(torch.LongTensor)
+
+        current_seq_numpy = self.event_cell[idx][2]
+        current_seq = torch.Tensor([self.event_cell[idx][2]])
+        current_seq = current_seq.type(torch.LongTensor)
+
+        if self.database['sequences'][current_seq_numpy]['seq_feature'] is None \
+                and self.database['event_features'] is None:
+            return current_time, history_time, current_event, history_event, current_seq  # 5 outputs
 
 
 class SequenceSampler(Dataset):
