@@ -119,23 +119,25 @@ class PointProcessModel(object):
                 if nonnegative is not None:
                     self.lambda_model.apply(clipper)
 
+
+                if validation_set is not None:
+                    validation_loss = self.validation(validation_set, use_cuda)
+                    logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
+                    if validation_loss < best_loss:
+                        best_model = copy.deepcopy(self.lambda_model)
+                        best_loss = validation_loss
+
                 # display training processes
                 if batch_idx % 100 == 0:
                     logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]'.format(
                         epoch, batch_idx * ci.size(0), len(dataloader.dataset), 100. * batch_idx / len(dataloader)))
                     if sparsity is not None:
-                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Loss: {:.6f}, Time={:.2f}sec'.format(
-                            loss.data, reg.data, loss_total, time.time() - start))
+                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Validate Loss: {:.6f}, Time={:.2f}sec'.format(
+                            loss.data, reg.data, validation_loss, time.time() - start))
                     else:
                         logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Loss: {:.6f}, Time={:.2f}sec'.format(
-                            loss.data, 0, loss_total, time.time() - start))
+                            loss.data, 0, validation_loss, time.time() - start))
 
-            if validation_set is not None:
-                validation_loss = self.validation(validation_set, use_cuda)
-                logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
-                if validation_loss < best_loss:
-                    best_model = copy.deepcopy(self.lambda_model)
-                    best_loss = validation_loss
 
                 self.learning_path.append(validation_loss)
                 self.training_time.append(time.time() - start0)
