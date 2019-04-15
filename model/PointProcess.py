@@ -142,8 +142,8 @@ class PointProcessModel(object):
                 self.learning_path.append(validation_loss)
                 self.training_time.append(time.time() - start0)
 
-            logger.info('Epoch : {}/{}, Used time: {: .2f} min, Estimated Time to finish: {: .2f} min'.format(
-                (epoch + 1), epochs, self.training_time[-1] / 60, self.training_time[-1] / 60 / (epoch +1) * (epochs -epoch - 1)
+            logger.info('Epoch : {}/{}, Used time: {: .2f} min, Estimated Time to finish: {: .2f} min, current loss: {: .3f}'.format(
+                (epoch + 1), epochs, self.training_time[-1] / 60, self.training_time[-1] / 60 / (epoch +1) * (epochs -epoch - 1), validation_loss
             ))
 
         if best_model is not None:
