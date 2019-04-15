@@ -56,7 +56,7 @@ class PointProcessModel(object):
         logger.info("The loss function is {}.".format(self.loss_function))
 
     def fit(self, dataloader, optimizer, epochs: int, scheduler=None, sparsity: float=None, nonnegative=None,
-            use_cuda: bool=False, validation_set=None):
+            use_cuda: bool=False, validation_set=None, verbose = True):
         """
         Learn parameters of a generalized Hawkes process given observed sequences
         :param dataloader: a pytorch batch-based data loader
@@ -119,7 +119,6 @@ class PointProcessModel(object):
                 if nonnegative is not None:
                     self.lambda_model.apply(clipper)
 
-
                 if validation_set is not None:
                     validation_loss = self.validation(validation_set, use_cuda)
                     logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
@@ -128,16 +127,16 @@ class PointProcessModel(object):
                         best_loss = validation_loss
 
                 # display training processes
-                if batch_idx % 100 == 0:
-                    logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]'.format(
-                        epoch, batch_idx * ci.size(0), len(dataloader.dataset), 100. * batch_idx / len(dataloader)))
-                    if sparsity is not None:
-                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Validate Loss: {:.6f}, Time={:.2f}sec'.format(
-                            loss.data, reg.data, validation_loss, time.time() - start))
-                    else:
-                        logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Loss: {:.6f}, Time={:.2f}sec'.format(
-                            loss.data, 0, validation_loss, time.time() - start))
-
+                if verbose:
+                    if batch_idx % 100 == 0:
+                        logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]'.format(
+                            epoch, batch_idx * ci.size(0), len(dataloader.dataset), 100. * batch_idx / len(dataloader)))
+                        if sparsity is not None:
+                            logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Validate Loss: {:.6f}, Time={:.2f}sec'.format(
+                                loss.data, reg.data, validation_loss, time.time() - start))
+                        else:
+                            logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Loss: {:.6f}, Time={:.2f}sec'.format(
+                                loss.data, 0, validation_loss, time.time() - start))
 
                 self.learning_path.append(validation_loss)
                 self.training_time.append(time.time() - start0)
