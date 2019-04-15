@@ -80,7 +80,7 @@ if __name__ == '__main__':
 
     # initialize optimizer
     optimizer_thinning = optim.SGD(hawkes_model.lambda_model.parameters(), lr=0.00000001)
-    optimizer_interval = optim.SGD(hawkes_model2.lambda_model.parameters(), lr=0.000001)
+    optimizer_interval = optim.SGD(hawkes_model2.lambda_model.parameters(), lr=0.00001)
     scheduler_thinning = lr_scheduler.ExponentialLR(optimizer_thinning, gamma=0.8)
     scheduler_interval = lr_scheduler.ExponentialLR(optimizer_interval, gamma=0.8)
 
