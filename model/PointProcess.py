@@ -94,8 +94,11 @@ class PointProcessModel(object):
             best_loss = validation_loss
         else:
             best_loss = np.inf
+            self.learning_path.append(validation_loss)
 
         start0 = time.time()
+
+        self.training_time.append(time.time() - start0)
         for epoch in range(epochs):
             if scheduler is not None:
                 scheduler.step()
@@ -134,8 +137,9 @@ class PointProcessModel(object):
                     best_model = copy.deepcopy(self.lambda_model)
                     best_loss = validation_loss
 
-            self.learning_path.append(validation_loss)
-            self.training_time.append(time.time() - start0)
+                self.learning_path.append(validation_loss)
+                self.training_time.append(time.time() - start0)
+
 
         if best_model is not None:
             self.lambda_model = copy.deepcopy(best_model)
