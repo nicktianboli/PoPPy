@@ -89,7 +89,7 @@ class PointProcessModel(object):
             FCs = None
 
         if validation_set is not None:
-            validation_loss = self.validation(validation_set, use_cuda)
+            validation_loss = self.validation(validation_set, use_cuda, verbose)
             logger.info('In the beginning, validation loss per event: {:.6f}.\n'.format(validation_loss))
             best_loss = validation_loss
         else:
@@ -120,7 +120,7 @@ class PointProcessModel(object):
                     self.lambda_model.apply(clipper)
 
                 if validation_set is not None:
-                    validation_loss = self.validation(validation_set, use_cuda)
+                    validation_loss = self.validation(validation_set, use_cuda, verbose)
                     if verbose:
                         logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
                     if validation_loss < best_loss:
@@ -149,7 +149,7 @@ class PointProcessModel(object):
         if best_model is not None:
             self.lambda_model = copy.deepcopy(best_model)
 
-    def validation(self, dataloader, use_cuda):
+    def validation(self, dataloader, use_cuda, verbose = True):
         """
         Compute the avaraged loss per event of a generalized Hawkes process
         given observed sequences and current model
@@ -180,10 +180,11 @@ class PointProcessModel(object):
             loss += self.loss_function(lambda_t, Lambda_t, ci)
 
             # display training processes
-            if batch_idx % 100 == 0:
-                logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
-                    batch_idx * ci.size(0), len(dataloader.dataset),
-                    100. * batch_idx / len(dataloader), time.time() - start))
+            if verbose:
+                if batch_idx % 100 == 0:
+                    logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
+                        batch_idx * ci.size(0), len(dataloader.dataset),
+                        100. * batch_idx / len(dataloader), time.time() - start))
         return loss/len(dataloader.dataset)
 
     def simulate(self,
