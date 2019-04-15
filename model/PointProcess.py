@@ -121,7 +121,8 @@ class PointProcessModel(object):
 
                 if validation_set is not None:
                     validation_loss = self.validation(validation_set, use_cuda)
-                    logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
+                    if verbose:
+                        logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
                     if validation_loss < best_loss:
                         best_model = copy.deepcopy(self.lambda_model)
                         best_loss = validation_loss
@@ -132,15 +133,17 @@ class PointProcessModel(object):
                         logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]'.format(
                             epoch, batch_idx * ci.size(0), len(dataloader.dataset), 100. * batch_idx / len(dataloader)))
                         if sparsity is not None:
-                            logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Validate Loss: {:.6f}, Time={:.2f}sec'.format(
+                            logger.info('Loss per event: {:.3f}, Regularizer: {:.3f}, Validate Loss: {:.3f}, Time={:.2f}sec'.format(
                                 loss.data, reg.data, validation_loss, time.time() - start))
                         else:
-                            logger.info('Loss per event: {:.6f}, Regularizer: {:.6f}, Loss: {:.6f}, Time={:.2f}sec'.format(
+                            logger.info('Loss per event: {:.3f}, Regularizer: {:.3f}, Loss: {:.6f}, Time={:.2f}sec'.format(
                                 loss.data, 0, validation_loss, time.time() - start))
 
                 self.learning_path.append(validation_loss)
                 self.training_time.append(time.time() - start0)
-
+                logger.info('Epoch : {}/{}, Used time: {: .2f} min, Estimated Time to finish: {: .2f} min'.format(
+                    (epoch + 1), epochs, self.training_time[-1] / 60, self.training_time[-1] / 60 / (epoch +1) * (epochs -epoch - 1)
+                ))
 
         if best_model is not None:
             self.lambda_model = copy.deepcopy(best_model)
