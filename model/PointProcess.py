@@ -31,7 +31,6 @@ class PointProcessModel(object):
         self.num_type = num_type
         exogenousIntensity = getattr(model.ExogenousIntensityFamily, mu_dict['model_name'])
         self.lambda_model = exogenousIntensity(num_type, mu_dict['parameter_set'])
-
         self.loss_type = loss_type
         if self.loss_type == 'mle':
             self.loss_function = MaxLogLike()
@@ -44,6 +43,9 @@ class PointProcessModel(object):
             logger.warning('Maximum likelihood estimation is applied instead.')
             self.loss_function = MaxLogLike()
         # self.print_info()
+
+        self.learning_path = []
+        self.training_time = []
 
     def print_info(self):
         """
@@ -93,10 +95,12 @@ class PointProcessModel(object):
         else:
             best_loss = np.inf
 
+        start0 = time.time()
         for epoch in range(epochs):
             if scheduler is not None:
                 scheduler.step()
             start = time.time()
+
             for batch_idx, samples in enumerate(dataloader):
                 ci, batch_dict = samples2dict(samples, device, Cs, FCs)
                 optimizer.zero_grad()
@@ -129,6 +133,9 @@ class PointProcessModel(object):
                 if validation_loss < best_loss:
                     best_model = copy.deepcopy(self.lambda_model)
                     best_loss = validation_loss
+
+            self.learning_path.append(validation_loss)
+            self.training_time.append(time.time() - start0)
 
         if best_model is not None:
             self.lambda_model = copy.deepcopy(best_model)
