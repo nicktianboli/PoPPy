@@ -499,16 +499,27 @@ class ThinningSampler(Dataset):
                      'label': None or int/float number indicating the labels of the sequence}
         :param memorysize: how many historical events remembered by each event
         """
+        N_mean = 0
+        for i in range(len(database['sequences'])):
+            num_event = database['sequences'][i]['events'].shape[0]
+            N_mean += num_event
+            if num_event < N_min:
+                N_min = num_event
+            if num_event > N_max:
+                N_max = num_event
+        N_mean /= len(database['sequences'])
+
         self.event_cell = []
         self.time_cell = []
         self.database = database
+        self.length = round(database.N_mean * prob)
         for i in range(len(database['sequences'])):
             seq_i = database['sequences'][i]
             times = seq_i['times']
             seq_i_length = len(times)
             events = seq_i['events']
             for j in range(len(events)):
-                choice_idx = np.random.choice(seq_i_length, round(seq_i_length * prob), replace= False)
+                choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
                 thinned_events = events[choice_idx]
                 thinned_time = times[choice_idx]
                 self.event_cell.append((events[-1], thinned_events, i))

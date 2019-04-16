@@ -57,7 +57,7 @@ class PointProcessModel(object):
         logger.info("The loss function is {}.".format(self.loss_function))
 
     def fit(self, dataloader, optimizer, epochs: int, scheduler=None, sparsity: float=None, nonnegative=None,
-            use_cuda: bool=False, validation_set=None, verbose = True, prob: float = 1):
+            use_cuda: bool=False, validation_set=None, verbose = True, prob: float = 1.0):
         """
         Learn parameters of a generalized Hawkes process given observed sequences
         :param dataloader: a pytorch batch-based data loader
