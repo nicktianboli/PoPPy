@@ -514,7 +514,7 @@ class ThinningSampler(Dataset):
         self.event_cell = []
         self.time_cell = []
         self.database = database
-        self.length = round(database.N_mean * prob)
+        self.length = round(N_mean * prob)
         for i in range(len(database['sequences'])):
             seq_i = database['sequences'][i]
             times = seq_i['times']
