@@ -499,6 +499,8 @@ class ThinningSampler(Dataset):
                      'label': None or int/float number indicating the labels of the sequence}
         :param memorysize: how many historical events remembered by each event
         """
+        N_max = 0
+        N_min = np.inf
         N_mean = 0
         for i in range(len(database['sequences'])):
             num_event = database['sequences'][i]['events'].shape[0]
