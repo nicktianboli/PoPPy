@@ -97,7 +97,7 @@ class PointProcessModel(object):
         else:
             best_loss = np.inf
 
-
+        prob = torch.Tensor(prob)
         start0 = time.time()
 
         self.training_time.append(time.time() - start0)
