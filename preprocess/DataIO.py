@@ -43,8 +43,11 @@ def load_sequences_csv(file_name: str, domain_names: Dict, upperlimit = None):
                 'seq2idx': None,
                 'idx2seq': None,
                 'sequences': []}
+
     if upperlimit is not None:
         df = pd.read_csv(file_name).iloc[:upperlimit]
+    else:
+        df = pd.read_csv(file_name)
     type2idx = {}
     idx2type = {}
     seq2idx = {}

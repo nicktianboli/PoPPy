@@ -45,6 +45,7 @@ class PointProcessModel(object):
         # self.print_info()
 
         self.learning_path = []
+        self.validation_path = []
         self.training_time = []
 
     def print_info(self):
@@ -56,7 +57,7 @@ class PointProcessModel(object):
         logger.info("The loss function is {}.".format(self.loss_function))
 
     def fit(self, dataloader, optimizer, epochs: int, scheduler=None, sparsity: float=None, nonnegative=None,
-            use_cuda: bool=False, validation_set=None, verbose = True):
+            use_cuda: bool=False, validation_set=None, verbose = True, prob: float = 1):
         """
         Learn parameters of a generalized Hawkes process given observed sequences
         :param dataloader: a pytorch batch-based data loader
@@ -92,9 +93,10 @@ class PointProcessModel(object):
             validation_loss = self.validation(validation_set, use_cuda, verbose)
             logger.info('In the beginning, validation loss per event: {:.6f}.\n'.format(validation_loss))
             best_loss = validation_loss
+            self.learning_path.append(validation_loss)
         else:
             best_loss = np.inf
-            self.learning_path.append(validation_loss)
+
 
         start0 = time.time()
 
@@ -108,6 +110,8 @@ class PointProcessModel(object):
                 ci, batch_dict = samples2dict(samples, device, Cs, FCs)
                 optimizer.zero_grad()
                 lambda_t, Lambda_t = self.lambda_model(batch_dict)
+                lambda_t *= prob
+                Lambda_t *= prob
                 loss = self.loss_function(lambda_t, Lambda_t, ci)  / lambda_t.size(0)
                 reg = 0
                 if sparsity is not None:
@@ -139,11 +143,12 @@ class PointProcessModel(object):
                             logger.info('Loss per event: {:.3f}, Regularizer: {:.3f}, Loss: {:.6f}, Time={:.2f}sec'.format(
                                 loss.data, 0, validation_loss, time.time() - start))
 
-                self.learning_path.append(validation_loss)
+                self.learning_path.append(loss_total)
+                self.validation_path.append(validation_loss)
                 self.training_time.append(time.time() - start0)
 
-            logger.info('Epoch : {}/{}, Used time: {: .2f} min, Estimated Time to finish: {: .2f} min, current loss: {: .3f}'.format(
-                (epoch + 1), epochs, self.training_time[-1] / 60, self.training_time[-1] / 60 / (epoch +1) * (epochs -epoch - 1), validation_loss
+            logger.info('Epoch : {}/{}, Used time: {: .2f} min, Estimated Time to finish: {: .2f} min, train loss: {: .3f}, validation loss: {: .3f}'.format(
+                (epoch + 1), epochs, self.training_time[-1] / 60, self.training_time[-1] / 60 / (epoch +1) * (epochs -epoch - 1), loss_total, validation_loss
             ))
 
         if best_model is not None:

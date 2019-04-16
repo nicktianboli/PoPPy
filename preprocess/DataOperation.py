@@ -478,7 +478,7 @@ class EventSampler(Dataset):
                 seq_feature, current_event_feature, history_event_feature  # 8 outputs
 
 class ThinningSampler(Dataset):
-    def __init__(self, database, length):
+    def __init__(self, database, prob):
         """
         :param database: the observed event sequences
             database = {'event_features': None or (C, De) float array of event's static features,
@@ -502,14 +502,13 @@ class ThinningSampler(Dataset):
         self.event_cell = []
         self.time_cell = []
         self.database = database
-        self.length = length # equivalence of memorysize
         for i in range(len(database['sequences'])):
             seq_i = database['sequences'][i]
             times = seq_i['times']
             seq_i_length = len(times)
             events = seq_i['events']
             for j in range(len(events)):
-                choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
+                choice_idx = np.random.choice(seq_i_length, seq_i_length * prob, replace= False)
                 thinned_events = events[choice_idx]
                 thinned_time = times[choice_idx]
                 self.event_cell.append((events[-1], thinned_events, i))
