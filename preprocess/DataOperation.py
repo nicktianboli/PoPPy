@@ -520,15 +520,15 @@ class ThinningSampler(Dataset):
             times = seq_i['times']
             seq_i_length = len(times)
             events = seq_i['events']
-            if sample_no is None:
-                for j in range(len(events)):
+            if sample_no is not None:
+                for j in range(sample_no):
                     choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
                     thinned_events = events[choice_idx]
                     thinned_time = times[choice_idx]
                     self.event_cell.append((events[-1], thinned_events, i))
                     self.time_cell.append((times[-1], thinned_time))
             else:
-                for j in range(round(1 / prob)):
+                for j in range(round(2 / prob)):
                     choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
                     thinned_events = events[choice_idx]
                     thinned_time = times[choice_idx]
