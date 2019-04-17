@@ -478,7 +478,7 @@ class EventSampler(Dataset):
                 seq_feature, current_event_feature, history_event_feature  # 8 outputs
 
 class ThinningSampler(Dataset):
-    def __init__(self, database, prob):
+    def __init__(self, database, prob, sample_no = None):
         """
         :param database: the observed event sequences
             database = {'event_features': None or (C, De) float array of event's static features,
@@ -520,12 +520,20 @@ class ThinningSampler(Dataset):
             times = seq_i['times']
             seq_i_length = len(times)
             events = seq_i['events']
-            for j in range(len(events)):
-                choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
-                thinned_events = events[choice_idx]
-                thinned_time = times[choice_idx]
-                self.event_cell.append((events[-1], thinned_events, i))
-                self.time_cell.append((times[-1], thinned_time))
+            if sample_no is None:
+                for j in range(len(events)):
+                    choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
+                    thinned_events = events[choice_idx]
+                    thinned_time = times[choice_idx]
+                    self.event_cell.append((events[-1], thinned_events, i))
+                    self.time_cell.append((times[-1], thinned_time))
+            else:
+                for j in range(round(1 / prob)):
+                    choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
+                    thinned_events = events[choice_idx]
+                    thinned_time = times[choice_idx]
+                    self.event_cell.append((events[-1], thinned_events, i))
+                    self.time_cell.append((times[-1], thinned_time))
         logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
     #    logger.info('Each event is influenced by its last {} historical events.'.format(self.memory_size))
 
