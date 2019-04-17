@@ -111,9 +111,9 @@ class PointProcessModel(object):
                 ci, batch_dict = samples2dict(samples, device, Cs, FCs)
                 optimizer.zero_grad()
                 lambda_t, Lambda_t = self.lambda_model(batch_dict)
-                lambda_t /= prob_tensor
-                Lambda_t /= prob_tensor
-                loss = self.loss_function(lambda_t, Lambda_t, ci)  / lambda_t.size(0) * prob_tensor
+                # lambda_t *= prob_tensor
+                # Lambda_t *= prob_tensor
+                loss = self.loss_function(lambda_t, Lambda_t, ci)  / lambda_t.size(0)
                 reg = 0
                 if sparsity is not None:
                     for parameter in self.lambda_model.parameters():
@@ -124,7 +124,6 @@ class PointProcessModel(object):
                 if nonnegative is not None:
                     self.lambda_model.apply(clipper)
 
-
                 if validation_set is not None:
                     validation_loss = self.validation(validation_set, use_cuda, verbose)
                     if verbose:
@@ -133,6 +132,9 @@ class PointProcessModel(object):
                         best_model = copy.deepcopy(self.lambda_model)
                         best_loss = validation_loss
 
+                esti_loss = loss - ((torch.Tensor([1.0])/prob_tensor - torch.Tensor([1.0])) * Lambda_t.sum()
+                                    + torch.log(prob_tensor) * lambda_t.size(0)) / lambda_t.size(0)
+
                 # display training processes
                 if verbose:
                     if batch_idx % 100 == 0:
@@ -140,10 +142,10 @@ class PointProcessModel(object):
                             epoch, batch_idx * ci.size(0), len(dataloader.dataset), 100. * batch_idx / len(dataloader)))
                         if sparsity is not None:
                             logger.info('Loss per event: {:.3f}, Regularizer: {:.3f}, Validate Loss: {:.3f}, Time={:.2f}sec'.format(
-                                loss.data, reg.data, validation_loss, time.time() - start))
+                                esti_loss.data, reg.data, validation_loss, time.time() - start))
                         else:
                             logger.info('Loss per event: {:.3f}, Regularizer: {:.3f}, Loss: {:.6f}, Time={:.2f}sec'.format(
-                                loss.data, 0, validation_loss, time.time() - start))
+                                esti_loss.data, 0, validation_loss, time.time() - start))
 
                 self.learning_path.append(loss_total)
                 self.validation_path.append(validation_loss)
