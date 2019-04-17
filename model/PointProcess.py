@@ -111,8 +111,8 @@ class PointProcessModel(object):
                 ci, batch_dict = samples2dict(samples, device, Cs, FCs)
                 optimizer.zero_grad()
                 lambda_t, Lambda_t = self.lambda_model(batch_dict)
-                lambda_t *= prob_tensor
-                Lambda_t *= prob_tensor
+                lambda_t /= prob_tensor
+                Lambda_t /= prob_tensor
                 loss = self.loss_function(lambda_t, Lambda_t, ci)  / lambda_t.size(0)
                 reg = 0
                 if sparsity is not None:
@@ -121,8 +121,11 @@ class PointProcessModel(object):
                 loss_total = loss + reg
                 loss_total.backward()
                 optimizer.step()
+                lambda_t *= prob_tensor
+                Lambda_t *= prob_tensor
                 if nonnegative is not None:
                     self.lambda_model.apply(clipper)
+
 
                 if validation_set is not None:
                     validation_loss = self.validation(validation_set, use_cuda, verbose)
