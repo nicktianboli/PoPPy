@@ -97,6 +97,7 @@ class PointProcessModel(object):
         else:
             best_loss = np.inf
 
+        prob = np.array([prob])
         prob_tensor = torch.from_numpy(prob).type(torch.FloatTensor)
         start0 = time.time()
 
