@@ -111,8 +111,8 @@ class PointProcessModel(object):
                 ci, batch_dict = samples2dict(samples, device, Cs, FCs)
                 optimizer.zero_grad()
                 lambda_t, Lambda_t = self.lambda_model(batch_dict)
-                # lambda_t *= prob_tensor
-                # Lambda_t *= prob_tensor
+#                lambda_t *= prob_tensor
+#                Lambda_t *= prob_tensor
                 loss = self.loss_function(lambda_t, Lambda_t, ci)  / lambda_t.size(0)
                 reg = 0
                 if sparsity is not None:
@@ -132,7 +132,7 @@ class PointProcessModel(object):
                         best_model = copy.deepcopy(self.lambda_model)
                         best_loss = validation_loss
 
-                esti_loss = loss - ((torch.Tensor([1.0])/prob_tensor - torch.Tensor([1.0])) * Lambda_t.sum()
+                esti_loss = loss  - ((torch.Tensor([1.0])/prob_tensor - torch.Tensor([1.0])) * Lambda_t.sum()
                                     + torch.log(prob_tensor) * lambda_t.size(0)) / lambda_t.size(0)
 
                 # display training processes
@@ -158,7 +158,7 @@ class PointProcessModel(object):
         if best_model is not None:
             self.lambda_model = copy.deepcopy(best_model)
 
-    def validation(self, dataloader, use_cuda, verbose = True):
+    def validation(self, dataloader, use_cuda, verbose = True, prob = 1.0):
         """
         Compute the avaraged loss per event of a generalized Hawkes process
         given observed sequences and current model
@@ -183,9 +183,13 @@ class PointProcessModel(object):
 
         start = time.time()
         loss = 0
+        prob = np.array([prob])
+        prob_tensor = torch.from_numpy(prob).type(torch.FloatTensor)
         for batch_idx, samples in enumerate(dataloader):
             ci, batch_dict = samples2dict(samples, device, Cs, FCs)
             lambda_t, Lambda_t = self.lambda_model(batch_dict)
+            lambda_t /= prob_tensor
+            Lambda_t /= prob_tensor
             loss += self.loss_function(lambda_t, Lambda_t, ci)
 
             # display training processes
