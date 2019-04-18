@@ -97,8 +97,7 @@ class PointProcessModel(object):
         else:
             best_loss = np.inf
 
-        prob = np.array([prob])
-        prob_tensor = torch.from_numpy(prob).type(torch.FloatTensor)
+        prob_tensor = torch.from_numpy(np.array([prob])).type(torch.FloatTensor)
         start0 = time.time()
 
         self.training_time.append(time.time() - start0)
@@ -125,7 +124,7 @@ class PointProcessModel(object):
                     self.lambda_model.apply(clipper)
 
                 if validation_set is not None:
-                    validation_loss = self.validation(validation_set, use_cuda, verbose)
+                    validation_loss = self.validation(validation_set, use_cuda, verbose, prob)
                     if verbose:
                         logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
                     if validation_loss < best_loss:
