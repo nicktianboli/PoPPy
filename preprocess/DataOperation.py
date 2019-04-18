@@ -524,7 +524,9 @@ class ThinningSampler(Dataset):
                 for j in range(sample_no):
                     choice_idx = np.random.choice(seq_i_length, self.length, replace= False)
                     thinned_events = events[choice_idx]
-                    thinned_time = times[choice_idx]
+
+                    # thinned_time = times[choice_idx]
+                    thinned_time = times[choice_idx] * prob ########
                     self.event_cell.append((events[-1], thinned_events, i))
                     self.time_cell.append((times[-1], thinned_time))
             else:
