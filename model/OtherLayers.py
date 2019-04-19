@@ -38,7 +38,7 @@ class MaxLogLike(nn.Module):
     """
     def __init__(self):
         super(MaxLogLike, self).__init__()
-        self.eps = float(np.finfo(np.float32).eps)
+        self.eps = float(np.finfo(np.float64).eps)
 
     def forward(self, lambda_t, Lambda_t, c):
         """
@@ -58,7 +58,7 @@ class MaxLogLikePerSample(nn.Module):
     """
     def __init__(self):
         super(MaxLogLikePerSample, self).__init__()
-        self.eps = float(np.finfo(np.float32).eps)
+        self.eps = float(np.finfo(np.float64).eps)
 
     def forward(self, lambda_t, Lambda_t, c):
         """
