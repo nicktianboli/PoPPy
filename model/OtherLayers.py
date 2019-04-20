@@ -48,8 +48,8 @@ class MaxLogLike(nn.Module):
         :param c: (batchsize, 1) long tensor representing the types of events
         :return: nll (1,)  float tensor representing negative log-likelihood
         """
-        return -(lambda_t+self.eps).log().sum() + Lambda_t.sum()
-
+        # return -(lambda_t+self.eps).log().sum() + Lambda_t.sum()
+        return -(lambda_t + 1e-300).log().sum() + Lambda_t.sum()
 
 class MaxLogLikePerSample(nn.Module):
     """
