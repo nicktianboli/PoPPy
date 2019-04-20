@@ -60,7 +60,7 @@ class HawkesProcessIntensity(nn.Module):
             logger.warning('The actvation layer is {}, which can not be identified... '.format(self.activation))
             logger.warning('Identity activation is applied instead.')
             self.act = Identity()
-            self.prob = prob
+        self.prob = prob
 
     def print_info(self):
         logger.info('A generalized Hawkes process intensity:')
