@@ -47,6 +47,7 @@ class PointProcessModel(object):
         self.learning_path = []
         self.validation_path = []
         self.training_time = []
+        self.mu_path = []
 
     def print_info(self):
         """
@@ -145,6 +146,7 @@ class PointProcessModel(object):
                 self.learning_path.append(loss_total)
                 self.validation_path.append(validation_loss)
                 self.training_time.append(time.time() - start0)
+            self.mu_path.append(self.lambda_model.state_dict()['exogenous_intensity.emb.weight'])
 
             logger.info('Epoch : {}/{}, Used time: {: .2f} min, Estimated Time to finish: {: .2f} min, train loss: {: .3f}, validation loss: {: .3f}'.format(
                 (epoch + 1), epochs, self.training_time[-1] / 60, self.training_time[-1] / 60 / (epoch +1) * (epochs -epoch - 1), loss_total, validation_loss
