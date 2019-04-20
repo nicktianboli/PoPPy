@@ -39,7 +39,7 @@ class HawkesProcessIntensity(nn.Module):
     def __init__(self,
                  exogenous_intensity,
                  endogenous_intensity,
-                 activation: str = None):
+                 activation: str = None, prob = 1.0):
         super(HawkesProcessIntensity, self).__init__()
         self.exogenous_intensity = exogenous_intensity
         self.endogenous_intensity = endogenous_intensity
@@ -60,6 +60,7 @@ class HawkesProcessIntensity(nn.Module):
             logger.warning('The actvation layer is {}, which can not be identified... '.format(self.activation))
             logger.warning('Identity activation is applied instead.')
             self.act = Identity()
+            self.prob = prob
 
     def print_info(self):
         logger.info('A generalized Hawkes process intensity:')
@@ -70,8 +71,8 @@ class HawkesProcessIntensity(nn.Module):
     def forward(self, sample_dict):
         mu, Mu = self.exogenous_intensity(sample_dict)
         alpha, Alpha = self.endogenous_intensity(sample_dict)
-        lambda_t = self.act(mu + alpha)  # (batch_size, 1)
-        Lambda_T = self.act(Mu + Alpha)  # (batch_size, num_type)
+        lambda_t = self.act(mu + alpha) * self.prob # (batch_size, 1)
+        Lambda_T = self.act(Mu + Alpha) * self.prob # (batch_size, num_type)
         return lambda_t, Lambda_T
 
     def intensity(self, sample_dict):
@@ -95,7 +96,7 @@ class HawkesProcessModel(PointProcessModel):
     contains most of necessary function.
     """
 
-    def __init__(self, num_type, mu_dict, alpha_dict, kernel_dict, activation, loss_type, use_cuda):
+    def __init__(self, num_type, mu_dict, alpha_dict, kernel_dict, activation, loss_type, use_cuda, prob = 1.0):
         """
         Initialize generalized Hawkes process
         :param num_type: int, the number of event types.
@@ -126,7 +127,7 @@ class HawkesProcessModel(PointProcessModel):
         kernel_model = decayKernel(kernel_para)
         alpha_model = endogenousImpacts(num_type, kernel_model, alpha_dict['parameter_set'])
 
-        self.lambda_model = HawkesProcessIntensity(mu_model, alpha_model, self.activation)
+        self.lambda_model = HawkesProcessIntensity(mu_model, alpha_model, self.activation, prob)
         self.print_info()
 
     def plot_exogenous(self, sample_dict, output_name: str = None):
