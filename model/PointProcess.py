@@ -97,7 +97,6 @@ class PointProcessModel(object):
         else:
             best_loss = np.inf
 
-        prob_tensor = torch.from_numpy(np.array([prob])).type(torch.FloatTensor)
         start0 = time.time()
 
         self.training_time.append(time.time() - start0)
@@ -110,8 +109,6 @@ class PointProcessModel(object):
                 ci, batch_dict = samples2dict(samples, device, Cs, FCs)
                 optimizer.zero_grad()
                 lambda_t, Lambda_t = self.lambda_model(batch_dict)
-                lambda_t /= prob_tensor
-                Lambda_t /= prob_tensor
                 loss = self.loss_function(lambda_t, Lambda_t, ci)  / lambda_t.size(0)
                 reg = 0
                 if sparsity is not None:
@@ -131,8 +128,7 @@ class PointProcessModel(object):
                         best_model = copy.deepcopy(self.lambda_model)
                         best_loss = validation_loss
 
-                esti_loss = loss  - ((torch.Tensor([1.0])/prob_tensor - torch.Tensor([1.0])) * Lambda_t.sum()
-                                    + torch.log(prob_tensor) * lambda_t.size(0)) / lambda_t.size(0)
+                esti_loss = loss_total.data
 
                 # display training processes
                 if verbose:
