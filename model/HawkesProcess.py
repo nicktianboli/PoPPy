@@ -71,8 +71,8 @@ class HawkesProcessIntensity(nn.Module):
     def forward(self, sample_dict):
         mu, Mu = self.exogenous_intensity(sample_dict)
         alpha, Alpha = self.endogenous_intensity(sample_dict)
-        lambda_t = self.act(mu + alpha) * self.prob # (batch_size, 1)
-        Lambda_T = self.act(Mu + Alpha) * self.prob # (batch_size, num_type)
+        lambda_t = self.act(mu + alpha) / self.prob # (batch_size, 1)
+        Lambda_T = self.act(Mu + Alpha) / self.prob # (batch_size, num_type)
         return lambda_t, Lambda_T
 
     def intensity(self, sample_dict):
