@@ -77,8 +77,8 @@ class PointProcessModel(object):
         self.lambda_model.to(device)
         best_model = None
         self.lambda_model.train()
-        self.mu_path.append(self.lambda_model.state_dict()['exogenous_intensity.emb.weight'])
-        self.alpha_path.append(self.lambda_model.state_dict()['endogenous_intensity.basis.0.weight'])
+        self.mu_path.append(copy.deepcopy(list(self.lambda_model.parameters())[0].data))
+        self.alpha_path.append(copy.deepcopy(list(self.lambda_model.parameters())[1].data))
 
         if nonnegative is not None:
             clipper = LowerBoundClipper(nonnegative)
