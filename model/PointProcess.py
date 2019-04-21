@@ -151,8 +151,8 @@ class PointProcessModel(object):
                 self.learning_path.append(loss_total)
                 self.validation_path.append(validation_loss)
                 self.training_time.append(time.time() - start0)
-                self.mu_path.append(self.lambda_model.state_dict()['exogenous_intensity.emb.weight'])
-                self.alpha_path.append(self.lambda_model.state_dict()['endogenous_intensity.basis.0.weight'])
+                self.mu_path.append(copy.deepcopy(self.lambda_model.state_dict()['exogenous_intensity.emb.weight'].data))
+                self.alpha_path.append(copy.deepcopy(self.lambda_model.state_dict()['endogenous_intensity.basis.0.weight'].data))
                 self.lambda_path.append(lambda_t)
                 self.Lambda_path.append(Lambda_t)
 
