@@ -153,7 +153,7 @@ class PointProcessModel(object):
                 self.training_time.append(time.time() - start0)
                 self.mu_path.append(self.lambda_model.state_dict()['exogenous_intensity.emb.weight'])
                 self.alpha_path.append(self.lambda_model.state_dict()['endogenous_intensity.basis.0.weight'])
-                self.lambda_model.append(lambda_t)
+                self.lambda_path.append(lambda_t)
                 self.Lambda_path.append(Lambda_t)
 
             logger.info('Epoch : {}/{}, Used time: {: .2f} min, Estimated Time to finish: {: .2f} min, train loss: {: .3f}, validation loss: {: .3f}'.format(
