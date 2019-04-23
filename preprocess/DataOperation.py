@@ -522,7 +522,7 @@ class Thinning_shrinking(Dataset):
             times = seq_i['times']
             events = seq_i['events']
             t_start = seq_i['t_start']
-            seq_i_length = len(seq_i)
+            seq_i_length = len(times)
             print(events.shape)
             for j in range(sample_no):
                 # former = np.zeros((memorysize,), dtype=np.int)
