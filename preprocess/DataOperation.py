@@ -515,7 +515,7 @@ class Thinning_shrinking(Dataset):
         self.event_cell = []
         self.time_cell = []
         self.database = database
-        self.length = prob * N_mean
+        self.length = round(prob * N_mean)
 
         for i in range(len(database['sequences'])):
             seq_i = database['sequences'][i]
