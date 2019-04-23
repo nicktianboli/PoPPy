@@ -526,7 +526,7 @@ class ThinningSampler(Dataset):
 
                 thinned_time = times[choice_idx]
                 self.event_cell.append((thinned_events[-1], thinned_events[:-1], i))
-                self.time_cell.append((thinned_events[-1], thinned_time[:-1]))
+                self.time_cell.append((thinned_time[-1], thinned_time[:-1]))
 
         logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
     #    logger.info('Each event is influenced by its last {} historical events.'.format(self.memory_size))
