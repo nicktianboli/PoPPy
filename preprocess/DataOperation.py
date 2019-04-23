@@ -529,7 +529,7 @@ class ThinningSampler(Dataset):
                 thinned_time = times[choice_idx]
 
             # print(events.shape)
-                for k in range(len(events)):
+                for k in range(len(thinned_events)):
                     target = thinned_events[k]
                     # former = np.zeros((memorysize,), dtype=np.int)
                     # former = np.random.permutation(len(self.database['type2idx']))
