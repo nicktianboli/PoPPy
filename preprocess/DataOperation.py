@@ -515,18 +515,41 @@ class ThinningSampler(Dataset):
         self.time_cell = []
         self.database = database
         self.length = round(N_mean * prob)
+        memorysize = self.length
         for i in range(len(database['sequences'])):
             seq_i = database['sequences'][i]
             times = seq_i['times']
             seq_i_length = len(times)
             events = seq_i['events']
+            t_start = seq_i['t_start']
             for j in range(sample_no):
-                choice_idx = np.random.choice(seq_i_length, self.length + 1, replace= False)
+                choice_idx = np.random.choice(seq_i_length, self.length +1 , replace= False)
                 thinned_events = events[choice_idx]
-
                 thinned_time = times[choice_idx]
-                self.event_cell.append((thinned_events[-1], thinned_events[:-1], i))
-                self.time_cell.append((thinned_time[-1], thinned_time[:-1]))
+
+            # print(events.shape)
+                for k in range(len(events)):
+                    target = thinned_events[k]
+                    # former = np.zeros((memorysize,), dtype=np.int)
+                    # former = np.random.permutation(len(self.database['type2idx']))
+                    # former = former[:memorysize]
+
+                    former = np.random.choice(len(self.database['type2idx']), memorysize)
+                    target_t = thinned_time[k]
+                    former_t = t_start * np.ones((memorysize,))
+
+                    if 0 < k < memorysize:
+                        former[-k:] = thinned_events[:k]
+                        former_t[-k:] = thinned_time[:k]
+                    elif k >= memorysize:
+                        former = thinned_events[k - memorysize:k]
+                        former_t = thinned_time[k - memorysize:k]
+
+                    self.event_cell.append((target, former, i))
+                    self.time_cell.append((target_t, former_t))
+
+                # self.event_cell.append((thinned_events[-1], thinned_events[:-1], i))
+                # self.time_cell.append((thinned_time[-1], thinned_time[:-1]))
 
         logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
     #    logger.info('Each event is influenced by its last {} historical events.'.format(self.memory_size))
