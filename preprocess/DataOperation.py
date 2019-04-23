@@ -532,6 +532,7 @@ class Thinning_shrinking(Dataset):
 
 
                 choice_idx = np.random.choice(seq_i_length, self.length + 1, replace=False)
+                choice_idx.sort()
                 thinned_events = events[choice_idx]
                 thinned_time = times[choice_idx] * self.length / seq_i_length
 
