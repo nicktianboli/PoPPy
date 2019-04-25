@@ -530,12 +530,10 @@ class Thinning_shrinking(Dataset):
                 # former = np.random.permutation(len(self.database['type2idx']))
                 # former = former[:memorysize]
 
-
-
                 choice_idx = np.random.choice(seq_i_length, self.length + 1, replace=False)
                 choice_idx.sort()
                 thinned_events = events[choice_idx]
-                thinned_time = times[choice_idx] * self.length / seq_i_length
+                thinned_time = times[0] + (times[choice_idx] - times[0]) * self.length / seq_i_length
 
                 self.event_cell.append((thinned_events[-1], thinned_events[:-1], i))
                 self.time_cell.append((thinned_time[-1], thinned_time[:-1]))
