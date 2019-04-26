@@ -203,7 +203,7 @@ class PointProcessModel(object):
                     logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
                         batch_idx * ci.size(0), len(dataloader.dataset),
                         100. * batch_idx / len(dataloader), time.time() - start))
-        return loss
+        return loss / len(dataloader)
 
     def simulate(self,
                  history,
