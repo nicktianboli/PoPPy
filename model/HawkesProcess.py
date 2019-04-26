@@ -254,7 +254,7 @@ class HawkesProcessModel_all(PointProcessModel):
         kernel_model = decayKernel(kernel_para)
         alpha_model = endogenousImpacts(num_type, kernel_model, alpha_dict['parameter_set'])
 
-        self.lambda_model = HawkesProcessIntensity(mu_model, alpha_model, self.activation, prob)
+        self.lambda_model = HawkesProcessIntensity_all(mu_model, alpha_model, self.activation, prob)
         self.print_info()
 
     def plot_exogenous(self, sample_dict, output_name: str = None):
