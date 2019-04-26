@@ -195,8 +195,7 @@ class PointProcessModel(object):
             lambda_t, Lambda_t = self.lambda_model(batch_dict)
             lambda_t /= prob_tensor
             Lambda_t /= prob_tensor
-            loss += self.loss_function(lambda_t, Lambda_t, ci) / batch_dict['tjs'].size(1)
-
+            loss += self.loss_function(lambda_t, Lambda_t, ci) / batch_dict['tjs'].size(0) * batch_dict['tjs'].size(1)
 
             # display training processes
             if verbose:
