@@ -603,7 +603,7 @@ class Thinning_shrinking(Dataset):
             return current_time, history_time, current_event, history_event, current_seq, \
                 seq_feature, current_event_feature, history_event_feature  # 8 outputs
 
-class Interval_sampler(Dataset):
+class IntervalSampler(Dataset):
     """Load event sequences via minbatch"""
     def __init__(self, database, memory_size:int, sample_no:int):
         """
