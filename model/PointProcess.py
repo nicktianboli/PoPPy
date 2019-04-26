@@ -195,7 +195,7 @@ class PointProcessModel(object):
             lambda_t, Lambda_t = self.lambda_model(batch_dict)
             lambda_t /= prob_tensor
             Lambda_t /= prob_tensor
-            loss += self.loss_function(lambda_t, Lambda_t, ci) / batch_dict['tjs'].size(0)
+            loss += self.loss_function(lambda_t, Lambda_t, ci)
 
             # display training processes
             if verbose:
@@ -203,7 +203,7 @@ class PointProcessModel(object):
                     logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
                         batch_idx * ci.size(0), len(dataloader.dataset),
                         100. * batch_idx / len(dataloader), time.time() - start))
-        return loss / len(dataloader)
+        return loss / len(dataloader.dataset)
 
     def simulate(self,
                  history,

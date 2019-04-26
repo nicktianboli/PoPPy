@@ -735,9 +735,9 @@ class FullData(Dataset):
             seq_i = database['sequences'][i]
             times = seq_i['times']
             events = seq_i['events']
-            self.event_cell.append((events[-1], events[:-1], i))
-            self.time_cell.append((times[-1], times[:-1]))
-        logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
+            self.event_cell.append((events[-1], events[:], i))
+            self.time_cell.append((times[-1], times[:]))
+        logger.info('In this dataset, the number of seq = {}.'.format(len(self.event_cell)))
     #    logger.info('Each event is influenced by its last {} historical events.'.format(self.memory_size))
 
     def __len__(self):
