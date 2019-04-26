@@ -154,7 +154,7 @@ class HawkesProcessIntensity_all(nn.Module):
             alpha, Alpha = self.endogenous_intensity(current_dict)
             lambda_t.append(self.act(mu + alpha) / self.prob) # (batch_size * length of each sequence, 1) where batch_size is the number of seq.
             Lambda_T.append(self.act(Mu + Alpha) / self.prob) # (batch_size * length of each sequence, num_type)
-        return torch.cat(lambda_t), torch.cat(Lambda_T)
+        return torch.cat(lambda_t) / Lambda_T.size(1), torch.cat(Lambda_T)/ Lambda_T.size(1)
 
     def intensity(self, sample_dict):
         mu = self.exogenous_intensity.intensity(sample_dict)
