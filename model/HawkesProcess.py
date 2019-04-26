@@ -141,8 +141,8 @@ class HawkesProcessIntensity_all(nn.Module):
         # ci is invalid and useless for thinning sampler.
         lambda_t = []
         Lambda_T = []
-        batch_size = sample_dict['tjs'].shape[1]
-        for i in range(sample_dict['tjs'].shape[0] - 1):
+        batch_size = sample_dict['tjs'].shape[0]
+        for i in range(sample_dict['tjs'].shape[1] - 1):
 
             current_dict = copy.deepcopy(sample_dict)
             current_dict['ci'] = sample_dict['cjs'][:, i+1].reshape((batch_size, 1))
