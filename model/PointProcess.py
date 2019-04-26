@@ -31,6 +31,7 @@ class PointProcessModel(object):
         self.num_type = num_type
         exogenousIntensity = getattr(model.ExogenousIntensityFamily, mu_dict['model_name'])
         self.lambda_model = exogenousIntensity(num_type, mu_dict['parameter_set'])
+        self.lambda_model_validation = exogenousIntensity(num_type, mu_dict['parameter_set'])
         self.loss_type = loss_type
         if self.loss_type == 'mle':
             self.loss_function = MaxLogLike()
@@ -171,8 +172,8 @@ class PointProcessModel(object):
         :param use_cuda: use cuda (true) or not (false)
         """
         device = torch.device('cuda:0' if use_cuda else 'cpu')
-        self.lambda_model.to(device)
-        self.lambda_model.eval()
+        self.lambda_model_validation.to(device)
+        self.lambda_model_validation.eval()
 
         Cs = torch.LongTensor(list(range(len(dataloader.dataset.database['type2idx']))))
         Cs = Cs.view(-1, 1)
@@ -192,7 +193,7 @@ class PointProcessModel(object):
         prob_tensor = torch.from_numpy(prob).type(torch.FloatTensor)
         for batch_idx, samples in enumerate(dataloader):
             ci, batch_dict = samples2dict(samples, device, Cs, FCs)
-            lambda_t, Lambda_t = self.lambda_model(batch_dict)
+            lambda_t, Lambda_t = self.lambda_model_validation(batch_dict)
             lambda_t /= prob_tensor
             Lambda_t /= prob_tensor
             loss += self.loss_function(lambda_t, Lambda_t, ci)
