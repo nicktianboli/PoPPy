@@ -89,6 +89,84 @@ class HawkesProcessIntensity(nn.Module):
         Lambda_T = self.act(Mu + Alpha)
         return Lambda_T
 
+class HawkesProcessIntensity_2(nn.Module):
+    """
+    The class of inhomogeneous Poisson process
+    the intensity is calculated on the whole seq.
+    """
+    def __init__(self,
+                 exogenous_intensity,
+                 endogenous_intensity,
+                 activation: str = None, prob = 1.0):
+        super(HawkesProcessIntensity_2, self).__init__()
+        self.exogenous_intensity = exogenous_intensity
+        self.endogenous_intensity = endogenous_intensity
+        if activation is None:
+            self.intensity_type = "exogenous intensity + endogenous impacts"
+            self.activation = 'identity'
+        else:
+            self.intensity_type = "{}(exogenous intensity + endogenous impacts)".format(activation)
+            self.activation = activation
+
+        if self.activation == 'relu':
+            self.act = nn.ReLU()
+        elif self.activation == 'softplus':
+            self.act = nn.Softplus(beta=self.num_type**0.5)
+        elif self.activation == 'identity':
+            self.act = Identity()
+        else:
+            logger.warning('The actvation layer is {}, which can not be identified... '.format(self.activation))
+            logger.warning('Identity activation is applied instead.')
+            self.act = Identity()
+        self.prob = prob
+
+    def print_info(self):
+        logger.info('A generalized Hawkes process intensity:')
+        logger.info('Intensity function lambda(t) = {}'.format(self.intensity_type))
+        self.exogenous_intensity.print_info()
+        self.endogenous_intensity.print_info()
+
+    def forward(self, sample_dict):
+        # The input here is several seq.
+        # a sample_dict has the keys:
+        # :param sample_dict is a dictionary contains a batch of samples
+        # sample_dict = {
+        #     'ci': events (batch_size, 1) LongTensor indicates each event's type in the batch
+        #     'cjs': history (batch_size, memory_size) LongTensor indicates historical events' types in the batch
+        #     'ti': event_time (batch_size, 1) FloatTensor indicates each event's timestamp in the batch
+        #     'tjs': history_time (batch_size, memory_size) FloatTensor represents history's timestamps in the batch
+        #     }
+
+        ## sample_dict must use thinning sampling.
+        # ci is invalid and useless for thinning sampler.
+        lambda_t = []
+        Lambda_T = []
+        for i in range(sample_dict['tjs'].shape[0] - 1):
+            current_dict = copy.deepcopy(sample_dict)
+            current_dict['ci'] = sample_dict['cjs'][i + 1]
+            current_dict['cjs'] = sample_dict['cjs'][:i+1]
+            current_dict['ti'] = sample_dict['tjs'][i + 1]
+            current_dict['tjs'] = sample_dict['tjs'][:i + 1]
+
+            mu, Mu = self.exogenous_intensity(current_dict)
+            alpha, Alpha = self.endogenous_intensity(current_dict)
+            lambda_t.append(self.act(mu + alpha) / self.prob) # (batch_size * length of each sequence, 1) where batch_size is the number of seq.
+            Lambda_T.append(self.act(Mu + Alpha) / self.prob) # (batch_size * length of each sequence, num_type)
+        return torch.cat(lambda_t), torch.cat(Lambda_T)
+
+    def intensity(self, sample_dict):
+        mu = self.exogenous_intensity.intensity(sample_dict)
+        alpha = self.endogenous_intensity.intensity(sample_dict)
+        lambda_t = self.act(mu + alpha)  # (batch_size, 1)
+        # print('mu={}'.format(float(mu.sum())))
+        # print('alpha={}'.format(float(alpha.sum())))
+        return lambda_t
+
+    def expect_counts(self, sample_dict):
+        Mu = self.exogenous_intensity.expect_counts(sample_dict)
+        Alpha = self.endogenous_intensity.expect_counts(sample_dict)
+        Lambda_T = self.act(Mu + Alpha)
+        return Lambda_T
 
 class HawkesProcessModel(PointProcessModel):
     """

@@ -480,7 +480,7 @@ class EventSampler(Dataset):
 
 class Thinning_shrinking(Dataset):
     """Load event sequences via minbatch"""
-    def __init__(self, database, prob, sample_no:int):
+    def __init__(self, database, prob, sample_no:int, shrink = False):
         """
         :param database: the observed event sequences
             database = {'event_features': None or (C, De) float array of event's static features,
@@ -533,10 +533,11 @@ class Thinning_shrinking(Dataset):
                 choice_idx = np.random.choice(seq_i_length, self.length + 1, replace=False)
                 choice_idx.sort()
                 thinned_events = events[choice_idx]
-                thinned_time = times[0] + (times[choice_idx] - times[0]) * self.length / seq_i_length
+                if shrink:
+                    thinned_time = times[0] + (times[choice_idx] - times[0]) * self.length / seq_i_length
 
-                self.event_cell.append((thinned_events[-1], thinned_events[:-1], i))
-                self.time_cell.append((thinned_time[-1], thinned_time[:-1]))
+                self.event_cell.append((thinned_events[-1], thinned_events, i))
+                self.time_cell.append((thinned_time[-1], thinned_time))
         logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
         logger.info('Each event is influenced by its last {} historical events.'.format(self.length))
 
