@@ -143,9 +143,9 @@ class HawkesProcessIntensity_all(nn.Module):
         Lambda_T = []
         for i in range(sample_dict['tjs'].shape[0] - 1):
             current_dict = copy.deepcopy(sample_dict)
-            current_dict['ci'] = sample_dict['cjs'][:, i+1]
+            current_dict['ci'] = sample_dict['cjs'][:, i+1].view(1, -1)
             current_dict['cjs'] = sample_dict['cjs'][:, :i+1]
-            current_dict['ti'] = sample_dict['tjs'][:, i+1]
+            current_dict['ti'] = sample_dict['tjs'][:, i+1].view(1, -1)
             current_dict['tjs'] = sample_dict['tjs'][:, :i+1]
 
             mu, Mu = self.exogenous_intensity(current_dict)
