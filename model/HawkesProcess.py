@@ -89,16 +89,16 @@ class HawkesProcessIntensity(nn.Module):
         Lambda_T = self.act(Mu + Alpha)
         return Lambda_T
 
-class HawkesProcessIntensity_2(nn.Module):
+class HawkesProcessIntensity_all(nn.Module):
     """
     The class of inhomogeneous Poisson process
-    the intensity is calculated on the whole seq.
+    the intensity is calculated on the whole seq. all pair is considered.
     """
     def __init__(self,
                  exogenous_intensity,
                  endogenous_intensity,
                  activation: str = None, prob = 1.0):
-        super(HawkesProcessIntensity_2, self).__init__()
+        super(HawkesProcessIntensity_all, self).__init__()
         self.exogenous_intensity = exogenous_intensity
         self.endogenous_intensity = endogenous_intensity
         if activation is None:
@@ -215,6 +215,56 @@ class HawkesProcessModel(PointProcessModel):
     def plot_causality(self, sample_dict, output_name: str = None):
         infectivity = self.lambda_model.endogenous_intensity.granger_causality(sample_dict)
         self.lambda_model.endogenous_intensity.plot_and_save(infectivity, output_name)
+
+
+class HawkesProcessModel_all(PointProcessModel):
+    """
+    The class of generalized Hawkes process model
+    contains most of necessary function.
+    """
+
+    def __init__(self, num_type, mu_dict, alpha_dict, kernel_dict, activation, loss_type, use_cuda, prob = 1.0):
+        """
+        Initialize generalized Hawkes process
+        :param num_type: int, the number of event types.
+        :param mu_dict: the dictionary of exogenous intensity's setting
+            mu_dict = {'model_name': the name of specific subclass of exogenous intensity,
+                       'parameter_set': a dictionary contains necessary parameters}
+        :param alpha_dict: the dictionary of endogenous intensity's setting
+            alpha_dict = {'model_name': the name of specific subclass of endogenous impact,
+                          'parameter_set': a dictionary contains necessary parameters}
+        :param kernel_dict: the dictionary of decay kernel's setting
+            kernel_dict = {'model_name': the name of specific subclass of decay kernel,
+                           'parameter_set': a ndarray contains necessary parameters}
+        :param activation: str, the type of activation function
+        :param loss_type: str, the type of loss functions
+            The length of the list is the number of modalities of the model
+            Each element of the list is the number of event categories for each modality
+        """
+        super(HawkesProcessModel_all, self).__init__(num_type, mu_dict, loss_type, use_cuda)
+        self.model_name = 'A Hawkes Process'
+        # self.num_type = num_type
+        self.activation = activation
+        exogenousIntensity = getattr(model.ExogenousIntensityFamily, mu_dict['model_name'])
+        endogenousImpacts = getattr(model.EndogenousImpactFamily, alpha_dict['model_name'])
+        decayKernel = getattr(model.DecayKernelFamily, kernel_dict['model_name'])
+
+        mu_model = exogenousIntensity(num_type, mu_dict['parameter_set'])
+        kernel_para = kernel_dict['parameter_set'].to(self.device)
+        kernel_model = decayKernel(kernel_para)
+        alpha_model = endogenousImpacts(num_type, kernel_model, alpha_dict['parameter_set'])
+
+        self.lambda_model = HawkesProcessIntensity(mu_model, alpha_model, self.activation, prob)
+        self.print_info()
+
+    def plot_exogenous(self, sample_dict, output_name: str = None):
+        intensity = self.lambda_model.exogenous_intensity.intensity(sample_dict)
+        self.lambda_model.exogenous_intensity.plot_and_save(intensity, output_name)
+
+    def plot_causality(self, sample_dict, output_name: str = None):
+        infectivity = self.lambda_model.endogenous_intensity.granger_causality(sample_dict)
+        self.lambda_model.endogenous_intensity.plot_and_save(infectivity, output_name)
+
 
 
 class HawkesProcessModel_OT(PointProcessModel):
