@@ -191,19 +191,20 @@ class PointProcessModel(object):
         loss = 0
         prob = np.array([prob])
         prob_tensor = torch.from_numpy(prob).type(torch.FloatTensor)
-        for batch_idx, samples in enumerate(dataloader):
-            ci, batch_dict = samples2dict(samples, device, Cs, FCs)
-            lambda_t, Lambda_t = self.lambda_model_validation(batch_dict)
-            lambda_t /= prob_tensor
-            Lambda_t /= prob_tensor
-            loss += self.loss_function(lambda_t, Lambda_t, ci)
+        with torch.no_grad():
+            for batch_idx, samples in enumerate(dataloader):
+                ci, batch_dict = samples2dict(samples, device, Cs, FCs)
+                lambda_t, Lambda_t = self.lambda_model_validation(batch_dict)
+                lambda_t /= prob_tensor
+                Lambda_t /= prob_tensor
+                loss += self.loss_function(lambda_t, Lambda_t, ci)
 
-            # display training processes
-            if verbose:
-                if batch_idx % 100 == 0:
-                    logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
-                        batch_idx * ci.size(0), len(dataloader.dataset),
-                        100. * batch_idx / len(dataloader), time.time() - start))
+                # display training processes
+                if verbose:
+                    if batch_idx % 100 == 0:
+                        logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
+                            batch_idx * ci.size(0), len(dataloader.dataset),
+                            100. * batch_idx / len(dataloader), time.time() - start))
         return loss / len(dataloader.dataset)
 
     def simulate(self,
