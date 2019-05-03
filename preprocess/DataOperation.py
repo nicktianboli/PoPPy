@@ -406,9 +406,9 @@ class EventSampler(Dataset):
                 former_t = t_start * np.ones((memorysize,))
 
                 if 0 < j < memorysize:
-                    pass
-                    # former[-j:] = events[:j]
-                    # former_t[-j:] = times[:j]
+                    # pass
+                    former[-j:] = events[:j]
+                    former_t[-j:] = times[:j]
                 elif j >= memorysize:
                     former = events[j-memorysize:j]
                     former_t = times[j-memorysize:j]
