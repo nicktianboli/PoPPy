@@ -413,8 +413,8 @@ class EventSampler(Dataset):
                     former = events[j-memorysize:j]
                     former_t = times[j-memorysize:j]
 
-                    self.event_cell.append((target, former, i))
-                    self.time_cell.append((target_t, former_t))
+                self.event_cell.append((target, former, i))
+                self.time_cell.append((target_t, former_t))
         logger.info('In this dataset, the number of events = {}.'.format(len(self.event_cell)))
         logger.info('Each event is influenced by its last {} historical events.'.format(self.memory_size))
 
