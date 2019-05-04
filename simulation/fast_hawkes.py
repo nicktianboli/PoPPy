@@ -257,7 +257,7 @@ class Hawkes:
         output = []
         for i in np.arange(steps.__len__()):
             theta_mat_i = theta_mat + steps[i]
-            output.append(np.linalg.norm(np.matmul(z_mat, theta_mat_i) - y_mat))
+            output.append(np.sum(np.matmul(z_mat, theta_mat_i) - y_mat))
 
         return output
 
