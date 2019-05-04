@@ -176,7 +176,7 @@ class Hawkes:
         if verbose:
             return output
 
-    def gradient(self, alpha, mu, input_list = None, T = None, beta = None):
+    def gradient(self, alpha, mu, steps, input_list = None, T = None, beta = None):
         if input_list is None:
             self.input_list = self.generated_time.copy()
         else:
@@ -242,7 +242,7 @@ class Hawkes:
                             output[i + 1, j] += KernelExp(time_list[j][k_prime] - time_list[i][k], beta)
             return output
 
-        z_mat = z_function(time_list = time_list, T = Tf, beta = 1, kernel= 'exp')
+        z_mat = z_function(time_list = time_list, T = Tf, beta = beta, kernel= 'exp')
 
         # if speedup:
         #     sample_flag = np.random.uniform(size=self.input_list.__len__())
@@ -251,10 +251,15 @@ class Hawkes:
         #     for i in np.arange(dimensionality):
         #         time_list.append(list(sampled_generated_time[sampled_generated_time['1dimension'] == i]['2timestamp']))
 
-        y_mat = y_function(time_list = time_list, beta = 1, kernel= 'exp')
+        y_mat = y_function(time_list = time_list, beta = beta, kernel= 'exp')
 
         theta_mat = np.concatenate((mu.reshape((1, dimensionality)), alpha.T))
-        return np.linalg.norm(np.matmul(z_mat, theta_mat) - y_mat)
+        output = []
+        for i in np.arange(steps.__len__()):
+            theta_mat_i = theta_mat + steps[i]
+            output.append(np.linalg.norm(np.matmul(z_mat, theta_mat_i) - y_mat))
+
+        return output
 
 
     def fast_fit(self, input_list = None, T = None, beta = None, kernel='exp',
