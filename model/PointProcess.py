@@ -187,7 +187,7 @@ class PointProcessModel(object):
             FCs = FCs.to(device)
         else:
             FCs = None
-        if accuracy:
+        if not accuracy:
             start = time.time()
             loss = 0
             prob = np.array([prob])
