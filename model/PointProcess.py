@@ -62,7 +62,8 @@ class PointProcessModel(object):
         logger.info("The loss function is {}.".format(self.loss_function))
 
     def fit(self, dataloader, optimizer, epochs: int, scheduler=None, sparsity: float=None, nonnegative=None,
-            use_cuda: bool=False, validation_set=None, verbose = True, prob: float = 1.0):
+            use_cuda: bool=False, validation_set=None, verbose = True, prob: float = 1.0,
+            accuracy = False, parameters = None):
         """
         Learn parameters of a generalized Hawkes process given observed sequences
         :param dataloader: a pytorch batch-based data loader
@@ -97,7 +98,7 @@ class PointProcessModel(object):
             FCs = None
 
         if validation_set is not None:
-            validation_loss = self.validation(validation_set, use_cuda, verbose)
+            validation_loss = self.validation(validation_set, use_cuda, verbose, prob, accuracy, parameters)
             logger.info('In the beginning, validation loss per event: {:.6f}.\n'.format(validation_loss))
             best_loss = validation_loss
             self.learning_path.append(validation_loss)
@@ -128,7 +129,7 @@ class PointProcessModel(object):
                     self.lambda_model.apply(clipper)
 
                 if validation_set is not None:
-                    validation_loss = self.validation(validation_set, use_cuda, verbose, prob)
+                    validation_loss = self.validation(validation_set, use_cuda, verbose, prob, accuracy, parameters)
                     if verbose:
                         logger.info('After Epoch: {}, validation loss per event: {:.6f}.\n'.format(epoch, validation_loss))
                     if validation_loss < best_loss:
@@ -164,7 +165,7 @@ class PointProcessModel(object):
         if best_model is not None:
             self.lambda_model = copy.deepcopy(best_model)
 
-    def validation(self, dataloader, use_cuda, verbose = True, prob = 1.0):
+    def validation(self, dataloader, use_cuda, verbose = True, prob = 1.0, accuracy = False, parameters = None):
         """
         Compute the avaraged loss per event of a generalized Hawkes process
         given observed sequences and current model
@@ -186,26 +187,30 @@ class PointProcessModel(object):
             FCs = FCs.to(device)
         else:
             FCs = None
+        if accuracy:
+            start = time.time()
+            loss = 0
+            prob = np.array([prob])
+            prob_tensor = torch.from_numpy(prob).type(torch.FloatTensor)
+            with torch.no_grad():
+                for batch_idx, samples in enumerate(dataloader):
+                    ci, batch_dict = samples2dict(samples, device, Cs, FCs)
+                    lambda_t, Lambda_t = self.lambda_model_validation(batch_dict)
+                    lambda_t /= prob_tensor
+                    Lambda_t /= prob_tensor
+                    loss += self.loss_function(lambda_t, Lambda_t, ci)
 
-        start = time.time()
-        loss = 0
-        prob = np.array([prob])
-        prob_tensor = torch.from_numpy(prob).type(torch.FloatTensor)
-        with torch.no_grad():
-            for batch_idx, samples in enumerate(dataloader):
-                ci, batch_dict = samples2dict(samples, device, Cs, FCs)
-                lambda_t, Lambda_t = self.lambda_model_validation(batch_dict)
-                lambda_t /= prob_tensor
-                Lambda_t /= prob_tensor
-                loss += self.loss_function(lambda_t, Lambda_t, ci)
-
-                # display training processes
-                if verbose:
-                    if batch_idx % 100 == 0:
-                        logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
-                            batch_idx * ci.size(0), len(dataloader.dataset),
-                            100. * batch_idx / len(dataloader), time.time() - start))
-        return loss / len(dataloader.dataset)
+                    # display training processes
+                    if verbose:
+                        if batch_idx % 100 == 0:
+                            logger.info('Validation [{}/{} ({:.0f}%)]\t Time={:.2f}sec.'.format(
+                                batch_idx * ci.size(0), len(dataloader.dataset),
+                                100. * batch_idx / len(dataloader), time.time() - start))
+            return loss / len(dataloader.dataset)
+        else:
+            with torch.no_grad():
+                loss = np.linalg.norm(list(self.lambda_model_validation.parameters())[1].data - parameters)
+            return loss
 
     def simulate(self,
                  history,
