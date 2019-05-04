@@ -209,7 +209,7 @@ class PointProcessModel(object):
             return loss / len(dataloader.dataset)
         else:
             with torch.no_grad():
-                loss = np.linalg.norm(list(self.lambda_model_validation.parameters())[1].data - parameters)/ self.num_type**2
+                loss = np.linalg.norm(list(self.lambda_model_validation.parameters())[1].data.numpy() - parameters)/self.num_type**2
             return loss
 
     def simulate(self,
