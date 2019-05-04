@@ -176,6 +176,86 @@ class Hawkes:
         if verbose:
             return output
 
+    def gradient(self, alpha, mu, input_list = None, T = None, beta = None):
+        if input_list is None:
+            self.input_list = self.generated_time.copy()
+        else:
+            self.input_list = input_list
+        global dimensionality
+        dimensionality = np.unique(self.input_list['1dimension']).__len__()
+
+        time_list = []
+        for i in np.arange(dimensionality):
+            time_list.append(list(self.input_list[self.input_list['1dimension'] == i]['2timestamp']))
+
+        if T is None:
+            if self.simulated:
+                Tf = self.sim_parameters['T']
+            else:
+                Tf = np.max(time_list)
+
+        def KernelExp(t, beta=1):
+            return beta * np.exp(-beta * t)
+
+        def exp_lasting_time(time_list, T, beta=1, kernel='exp'):
+            output = copy.deepcopy(time_list)
+
+            if kernel == 'exp':
+                for seq in np.arange(time_list.__len__()):
+                    for timestamp in np.arange(time_list[seq].__len__()):
+                        output[seq][timestamp] = KernelExp((T - time_list[seq][timestamp]), beta)
+            return output
+
+        def z_function(time_list, T, beta = 1, kernel='exp'):
+            exp_lasting_time_matrix = exp_lasting_time(time_list, T)
+            dimensionality = time_list.__len__()
+            output = np.zeros((dimensionality + 1, dimensionality + 1))
+
+            output[0, 0] = T
+            for i in np.arange(dimensionality):
+                for k in np.arange(exp_lasting_time_matrix[i].__len__()):
+                    output[0, i + 1] += (1. - exp_lasting_time_matrix[i][k])
+                    output[i + 1, 0] += (1. - exp_lasting_time_matrix[i][k])
+
+            for i in np.arange(dimensionality):
+                for j in np.arange(dimensionality):
+                    for k in np.arange(exp_lasting_time_matrix[i].__len__()):
+                        for k_prime in np.arange(exp_lasting_time_matrix[j].__len__()):
+                            lower_bound = np.abs(time_list[i][k] - time_list[j][k_prime])
+                            output[i + 1, j + 1] += beta * (
+                                        np.exp(-beta * lower_bound) - exp_lasting_time_matrix[i][k] *
+                                        exp_lasting_time_matrix[j][k_prime]) / 2.
+            return output
+
+        def y_function(time_list, beta = 1, kernel='exp'):
+            dimensionality = time_list.__len__()
+            output = np.zeros((dimensionality + 1, dimensionality))
+
+            for i in np.arange(dimensionality):
+                #  output[0, i] = np.sum(time_list[i])
+                output[0, i] = time_list[i].__len__()
+            for i in np.arange(dimensionality):
+                for j in np.arange(dimensionality):
+                    for k in np.arange(time_list[i].__len__()):
+                        k_prime_length = sum([t_k > time_list[i][k] for t_k in time_list[j]])
+                        for k_prime in np.arange(k_prime_length) + (time_list[j].__len__() - k_prime_length):
+                            output[i + 1, j] += KernelExp(time_list[j][k_prime] - time_list[i][k], beta)
+            return output
+
+        z_mat = z_function(time_list = time_list, T = Tf, beta = 1, kernel= 'exp')
+
+        # if speedup:
+        #     sample_flag = np.random.uniform(size=self.input_list.__len__())
+        #     sampled_generated_time = self.input_list[sample_flag < P]
+        #     time_list = []
+        #     for i in np.arange(dimensionality):
+        #         time_list.append(list(sampled_generated_time[sampled_generated_time['1dimension'] == i]['2timestamp']))
+
+        y_mat = y_function(time_list = time_list, beta = 1, kernel= 'exp')
+
+        theta_mat = np.concatenate((mu.reshape((1, dimensionality)), alpha.T))
+        return np.linalg.norm(np.matmul(z_mat, theta_mat) - y_mat)
+
 
     def fast_fit(self, input_list = None, T = None, beta = None, kernel='exp',
                  NonNeg=False, verbose = False, speedup=False, P = 0.2):
