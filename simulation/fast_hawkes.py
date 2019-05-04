@@ -242,7 +242,7 @@ class Hawkes:
                             output[i + 1, j] += KernelExp(time_list[j][k_prime] - time_list[i][k], beta)
             return output
 
-        z_mat = z_function(time_list = time_list, T = Tf, beta = beta, kernel= 'exp')
+        z_mat = z_function(time_list = time_list, T = Tf, beta = beta, kernel= 'exp') / self.input_list.__len__()
 
         # if speedup:
         #     sample_flag = np.random.uniform(size=self.input_list.__len__())
@@ -251,13 +251,13 @@ class Hawkes:
         #     for i in np.arange(dimensionality):
         #         time_list.append(list(sampled_generated_time[sampled_generated_time['1dimension'] == i]['2timestamp']))
 
-        y_mat = y_function(time_list = time_list, beta = beta, kernel= 'exp')
+        y_mat = y_function(time_list = time_list, beta = beta, kernel= 'exp')/ self.input_list.__len__()
 
         theta_mat = np.concatenate((mu.reshape((1, dimensionality)), alpha.T))
         output = []
         for i in np.arange(steps.__len__()):
             theta_mat_i = theta_mat + steps[i]
-            output.append(np.sum(np.matmul(z_mat, theta_mat_i) - y_mat))
+            output.append(np.linalg.norm(np.matmul(z_mat, theta_mat_i) - y_mat))
 
         return output
 
